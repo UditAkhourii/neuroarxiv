@@ -1,0 +1,18 @@
+{
+  "name": "neuroarxiv",
+  "version": "0.1.0",
+  "description": "Grounds a coding agent's architecture decisions in real arXiv prior art: parallel isolated reads of papers found category-wise (divergence), converged into one recommended path with citations, a first step, and known failure modes to avoid.",
+  "author": {
+    "name": "NeuroArxiv contributors"
+  },
+  "homepage": "https://github.com/UditAkhourii/neuroarxiv#readme",
+  "repository": "https://github.com/UditAkhourii/neuroarxiv",
+  "license": "MIT",
+  "keywords": [
+    "arxiv",
+    "research",
+    "prior-art",
+    "literature-review",
+    "architecture"
+  ]
+}

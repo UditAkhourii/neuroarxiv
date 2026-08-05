@@ -1,0 +1,29 @@
+{
+  "name": "neuroarxiv",
+  "owner": {
+    "name": "NeuroArxiv contributors",
+    "url": "https://github.com/UditAkhourii/neuroarxiv"
+  },
+  "plugins": [
+    {
+      "name": "neuroarxiv",
+      "source": "./",
+      "description": "Grounds a coding agent's architecture decisions in real arXiv prior art: parallel isolated reads of papers found category-wise, converged into one recommended path with citations.",
+      "version": "0.1.0",
+      "author": {
+        "name": "NeuroArxiv contributors"
+      },
+      "homepage": "https://github.com/UditAkhourii/neuroarxiv#readme",
+      "repository": "https://github.com/UditAkhourii/neuroarxiv",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "arxiv",
+        "research",
+        "prior-art",
+        "literature-review",
+        "architecture"
+      ]
+    }
+  ]
+}

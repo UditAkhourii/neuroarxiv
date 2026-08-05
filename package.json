@@ -1,0 +1,62 @@
+{
+  "name": "neuroarxiv-agent",
+  "version": "0.1.0",
+  "description": "NeuroArxiv — a skill for coding agents. Before you build something new, it reads arXiv category-wise in parallel isolated passes (the divergent half), then converges on one recommended path grounded in real papers, with citations, a first step, and known prior-art failure modes to avoid.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "neuroarxiv": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "dev": "tsx src/cli.ts",
+    "start": "node dist/cli.js"
+  },
+  "keywords": [
+    "arxiv",
+    "research",
+    "prior-art",
+    "literature-review",
+    "architecture",
+    "claude",
+    "claude-agent-sdk",
+    "agent",
+    "agents",
+    "ai",
+    "llm",
+    "skill"
+  ],
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/UditAkhourii/neuroarxiv.git"
+  },
+  "homepage": "https://github.com/UditAkhourii/neuroarxiv#readme",
+  "bugs": {
+    "url": "https://github.com/UditAkhourii/neuroarxiv/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "p-limit": "^5.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
