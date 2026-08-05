@@ -66,7 +66,7 @@ and tells you what to watch for even in the paths not taken.
 ## Install
 
 ```bash
-git clone https://github.com/UditAkhourii/neuroarxiv.git
+git clone https://github.com/DivergentLab/neuroarxiv.git
 cd neuroarxiv
 npm install
 npm run build
