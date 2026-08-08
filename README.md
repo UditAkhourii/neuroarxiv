@@ -24,46 +24,39 @@ of guessing wrong is a rebuild, not a typo.
 
 ---
 
-## Side-by-side: cold vs NeuroArxiv
+## Fair fight: cold vs. general web search vs. NeuroArxiv
 
-One eval problem, same model, two strategies. Full breakdown — all 5
-problems, methodology, honest limitations — in [`EVALS.md`](./EVALS.md).
+Not "research vs. no research" — that's an easy win for anyone. The real
+question is whether NeuroArxiv's isolate-then-converge discipline beats a
+plain, capable agent with normal web + arXiv access and no special process.
+Same model, same 5 cross-domain problems (physics, applied math,
+quantitative biology, ML, statistics), three conditions, run independently.
+A sample of the web-search condition's citations was verified against the
+real arXiv API before anything below was scored — it's a genuinely grounded
+condition, not a strawman.
 
-> **Problem.** *"Multiple coding agents are working on the same repository
-> concurrently. How should they coordinate so they don't overwrite or
-> conflict with each other's edits?"*
+**The headline isn't a ratio.** Every transcript was re-read for one
+specific pattern: does the answer name a source it just cited and flag a
+real limitation in *that source's own claim* — not a generic risk, a
+documented weakness in the specific paper.
 
-<table>
-<tr>
-<th width="50%">🟦 Cold (no skill)</th>
-<th width="50%">🟧 NeuroArxiv</th>
-</tr>
-<tr valign="top">
-<td>
+| | Cold | Web + arXiv (undisciplined) | **NeuroArxiv** |
+| --- | :---: | :---: | :---: |
+| Problems with a source-skepticism flag | 0/5 | 0/5 | **5/5** |
+| Total flags | 0 | 0 | **7** |
 
-"Use a git worktree or branch per agent, plus a lock file so agents claim
-non-overlapping files before starting work."
+Zero vs. zero vs. seven, out of five problems each. NeuroArxiv caught a
+withdrawn proof it had cited and declined to rely on it. It caught a
+benchmark result validated at only one context length and flagged it before
+recommending the approach. Cold and web-search both produced real,
+reasonable answers — neither produced that.
 
-**What's missing:** who releases the lock, what happens on timeout, how
-staleness is handled. Correct in spirit, unspecified in practice.
-
-</td>
-<td>
-
-Named an actual protocol — **Contract-Net-style claim rounds**: announce →
-claim → award → renew/release — citing a paper on coordinating LLM agents
-specifically, recent enough that no model's training data plausibly has it.
-
-**What it adds:** the exact questions the cold answer left open, answered
-by construction — because a real paper had already worked through them.
-
-</td>
-</tr>
-</table>
-
-**2 clear wins, 1 marginal win, 1 tie, 1 correct abort — out of 5.** Not a
-sweep. Full scorecard, real cost numbers, and the honest caveats (small
-sample, self-graded) in [`EVALS.md`](./EVALS.md).
+On raw answer quality (specificity, risk quality), NeuroArxiv beat the
+web-search condition by a modest **1.1x–1.3x**, and *lost* on citation
+breadth in 2 of 5 problems — arXiv-only search has a narrower net than
+general web search, and that's reported, not hidden. Full scorecard,
+per-problem transcripts, and every honest limitation:
+[`EVALS.md`](./EVALS.md) · raw data: [`bench/deep-tech-eval-transcripts.md`](./bench/deep-tech-eval-transcripts.md).
 
 ---
 
