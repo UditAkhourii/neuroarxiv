@@ -40,11 +40,11 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/DivergentLab/neuroarxiv.git"
+    "url": "git+https://github.com/UditAkhourii/neuroarxiv.git"
   },
-  "homepage": "https://github.com/DivergentLab/neuroarxiv#readme",
+  "homepage": "https://github.com/UditAkhourii/neuroarxiv#readme",
   "bugs": {
-    "url": "https://github.com/DivergentLab/neuroarxiv/issues"
+    "url": "https://github.com/UditAkhourii/neuroarxiv/issues"
   },
   "engines": {
     "node": ">=18"

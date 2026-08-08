@@ -1,6 +1,10 @@
 # NeuroArxiv
 
-A Claude skill (plus a standalone CLI) that reads arXiv before you build.
+**A skill to kill from-scratch coding.**
+
+Before Claude designs something new, it checks arXiv first — real papers,
+read in isolation, converged into one cited recommendation. Not a search
+wrapper. A second opinion your architecture decisions didn't used to get.
 
 ## The problem
 
@@ -47,6 +51,48 @@ brainstorming tools: NeuroArxiv does not hand back a shortlist of "here are
 stuck. It commits to one recommendation, states why the runner-ups lost,
 and tells you what to watch for even in the paths not taken.
 
+## The eval
+
+We ran the same 5 build problems through the same underlying model twice —
+once cold (no tools, straight from the model's own reasoning), once forced
+through NeuroArxiv's isolate → score → cluster → converge loop — and diffed
+the two sets of answers directly. This is small and self-graded, not a
+peer-reviewed benchmark; treat the numbers below as a first data point, not
+a proof.
+
+**Design quality**, judged scenario by scenario:
+
+| Scenario | Verdict |
+| --- | --- |
+| Rate limiter across a leader election | Tied — both landed on the same architecture; NeuroArxiv added a risk note, not a better design |
+| RAG pipeline: filter irrelevant retrieved context | Marginal win — more precise mechanism (NLI/entailment filter vs. a generic reranker), sharper failure mode |
+| Multiple coding agents coordinating on one repo | **Clear win** — named an actual protocol (Contract-Net claim rounds) where the cold answer left "who releases the lock, on what timeout" unanswered |
+| Add a boolean dark-mode settings flag | N/A — correctly **aborted** the pre-flight gate, zero fetches spent on a trivial task |
+| Postgres p99 latency, small skewed hot set | **Clear win** — specified *how* to track a shifting hot set (heavy-hitter/count-min sketch) where the cold answer just said "add a cache" |
+
+**2 clear wins, 1 marginal win, 1 tie, 1 correct abort, out of 5.** Not a
+sweep — the tie is a real result, not cherry-picked out. The pattern behind
+the wins: NeuroArxiv pulled ahead specifically when the sub-problem the cold
+answer glossed over was exactly what the cited paper's mechanism was built
+to solve.
+
+**Cost**, aggregated across all 5 scenarios:
+
+| | Cold (no skill) | NeuroArxiv | Delta |
+| --- | ---: | ---: | ---: |
+| Wall-clock | 28.2s | 342.5s | ~12x |
+| Tokens | 48,178 | 79,638 | ~1.65x |
+| Real arXiv fetches | 0 | 9 | — |
+
+The cost is not evenly spread — the trivial scenario cost nothing (correct
+abort before any fetch), and the 12x/1.65x is concentrated in the four
+scenarios that actually warranted a literature check. This run also used a
+budget-constrained isolation mode (sequential single-context reads instead
+of true parallel Agent-per-paper spawns) to keep 5 scenarios tractable in
+one sitting, so both the token count and wall-clock here are approximations
+of the loop as specified in [SKILL.md](skills/neuroarxiv/SKILL.md), not an
+exact measurement of it.
+
 ## Usability, actionability, impact
 
 - **Usable mid-build.** It's a skill, not a research assistant you context-
@@ -66,7 +112,7 @@ and tells you what to watch for even in the paths not taken.
 ## Install
 
 ```bash
-git clone https://github.com/DivergentLab/neuroarxiv.git
+git clone https://github.com/UditAkhourii/neuroarxiv.git
 cd neuroarxiv
 npm install
 npm run build
