@@ -1,5 +1,7 @@
 # NeuroArxiv
 
+![NeuroArxiv — Never Build From Scratch](Assets/banner.png)
+
 **A skill to kill from-scratch coding.**
 
 Before Claude designs something new, it checks arXiv first — real papers,
@@ -111,11 +113,25 @@ exact measurement of it.
 
 ## Install
 
+One line, no clone, no build step to run yourself — drops the skill straight
+into `~/.claude/skills/neuroarxiv`:
+
+```bash
+npx github:UditAkhourii/neuroarxiv install
+```
+
+Restart Claude Code (or start a new session) and `/neuroarxiv "<problem>"`
+is live.
+
+Prefer the full local checkout (for editing the engine, running the CLI
+directly, or contributing)?
+
 ```bash
 git clone https://github.com/UditAkhourii/neuroarxiv.git
 cd neuroarxiv
 npm install
 npm run build
+node dist/cli.js install
 ```
 
 ## Usage

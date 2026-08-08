@@ -4,11 +4,35 @@
 // Usage:
 //   neuroarxiv "how should I cache LLM completions across requests?"
 //   neuroarxiv "..." --categories cs.DB,cs.DC --papers 5 --json > result.json
+//   neuroarxiv install    (drop the skill into ~/.claude/skills/neuroarxiv)
 
-import { readFileSync, statSync } from "node:fs";
+import { readFileSync, statSync, mkdirSync, copyFileSync, existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { run } from "./engine.js";
 import { renderText } from "./render.js";
 import type { RunEvent, RunOptions } from "./types.js";
+
+// Package root is one level up from dist/cli.js (or src/cli.ts under tsx).
+const PACKAGE_ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
+
+function installSkill(): void {
+  const source = join(PACKAGE_ROOT, "skills", "neuroarxiv", "SKILL.md");
+  if (!existsSync(source)) {
+    console.error(`Error: couldn't find the bundled SKILL.md at ${source}`);
+    console.error("This usually means the package wasn't installed with its skills/ directory intact.");
+    process.exit(1);
+  }
+
+  const targetDir = join(homedir(), ".claude", "skills", "neuroarxiv");
+  const target = join(targetDir, "SKILL.md");
+  mkdirSync(targetDir, { recursive: true });
+  copyFileSync(source, target);
+
+  console.log(`✓ Installed the neuroarxiv skill to ${target}`);
+  console.log(`  Restart Claude Code (or start a new session) and run /neuroarxiv "<problem>".`);
+}
 
 type Flags = {
   problem: string;
@@ -83,6 +107,7 @@ function printHelp() {
   first step and known prior-art pitfalls to avoid — instead of a shortlist.
 
 USAGE
+  neuroarxiv install         drop the skill into ~/.claude/skills/neuroarxiv
   neuroarxiv "<problem>" [flags]
 
 FLAGS
@@ -106,6 +131,11 @@ EXAMPLES
 }
 
 async function main() {
+  if (process.argv[2] === "install") {
+    installSkill();
+    return;
+  }
+
   const flags = parse(process.argv.slice(2));
   if (!flags.problem) { printHelp(); process.exit(1); }
 
