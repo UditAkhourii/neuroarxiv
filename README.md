@@ -8,6 +8,11 @@
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#install)
 
+> ### 🎮 [**Join the Discord →**](https://discord.gg/NbWwkwwGw)
+> This is where the real-time thinking happens: arXiv category coverage, eval design, prior-art hunting, and neurodivergence-inspired research on reasoning architectures — shared with the [ADHD](https://github.com/UditAkhourii/adhd) community. Got opinions on isolation discipline, corpus gaps, or just want to argue about the next eval problem — **[come argue with us live](https://discord.gg/NbWwkwwGw).**
+
+> 👉 [**Join the community →**](https://tally.so/r/WO1Nzj) as a contributor, maintainer, early adopter, or just a member. One short form. We coordinate category-taxonomy contributions, eval problems, integrations, and adopter onboarding there.
+
 > **Before Claude designs something new, it checks arXiv first.**
 
 Real papers, fetched over real HTTP, read in isolation so no source anchors
