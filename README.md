@@ -67,15 +67,34 @@ per-problem transcripts, and every honest limitation:
 
 ## Install
 
-One line, no clone, no build step of your own — drops the skill straight
-into `~/.claude/skills/neuroarxiv`:
+One line, no clone, no build step of your own:
 
 ```bash
 npx github:UditAkhourii/neuroarxiv install
 ```
 
-Restart Claude Code (or start a new session) and `/neuroarxiv "<problem>"`
-is live.
+Works for **Claude Code and Codex CLI**. Both discover skills at
+`<agent home>/skills/<name>/SKILL.md` and read the same frontmatter, so one
+bundled skill serves both — with no flag, `install` picks whichever agents are
+actually present on your machine.
+
+| Target | Flag | Lands in |
+| --- | --- | --- |
+| Claude Code | `--claude` | `~/.claude/skills/neuroarxiv` |
+| Codex CLI | `--codex` | `~/.codex/skills/neuroarxiv` |
+| Both | `--all` | both, whether or not they're detected |
+
+Pin a target explicitly when you want it installed regardless of detection:
+
+```bash
+npx github:UditAkhourii/neuroarxiv install --codex
+```
+
+`CLAUDE_CONFIG_DIR` and `CODEX_HOME` are honoured if you keep those directories
+somewhere non-default.
+
+Restart the agent (or start a new session) and NeuroArxiv is live — in Claude
+Code as `/neuroarxiv "<problem>"`, in Codex by asking for it by name.
 
 <details>
 <summary>Prefer a full local checkout (editing the engine, running the CLI directly, contributing)?</summary>
