@@ -1,0 +1,6 @@
+interface:
+  display_name: "NeuroArxiv"
+  short_description: "Research arXiv prior art before building architecture"
+  default_prompt: "Use $neuroarxiv before committing to a non-trivial architecture or algorithm."
+policy:
+  allow_implicit_invocation: true

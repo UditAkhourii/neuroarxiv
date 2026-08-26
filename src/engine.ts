@@ -19,58 +19,58 @@
 
 import pLimit from "p-limit";
 import { z } from "zod";
-import { callLLM, parseJSON } from "./llm.js";
-import { renderCategoryTable, looksLikeCategoryId } from "./categories.js";
 import { searchArxivCategories, widenSearch } from "./arxiv.js";
+import { looksLikeCategoryId, renderCategoryTable } from "./categories.js";
+import { callLLM, parseJSON } from "./llm.js";
 import type {
-  AlternatePath,
-  Citation,
-  Cluster,
-  ConvergedPath,
-  Paper,
-  PaperRead,
-  RunOptions,
-  RunResult,
-  Score,
-} from "./types.js";
+	AlternatePath,
+	Citation,
+	Cluster,
+	ConvergedPath,
+	Paper,
+	PaperRead,
+	RunOptions,
+	RunResult,
+	Score,
+} from "./types.ts";
 
 const CategorySelectSchema = z.object({
-  categories: z.array(z.object({ id: z.string(), why: z.string() })).min(1),
-  terms: z.array(z.string()).min(1),
-  note: z.string().optional(),
+	categories: z.array(z.object({ id: z.string(), why: z.string() })).min(1),
+	terms: z.array(z.string()).min(1),
+	note: z.string().optional(),
 });
 
 const ReadSchema = z.object({
-  approach: z.string(),
-  borrow: z.string(),
-  limitation: z.string(),
-  relevanceNote: z.string(),
+	approach: z.string(),
+	borrow: z.string(),
+	limitation: z.string(),
+	relevanceNote: z.string(),
 });
 
 const ScoreRowSchema = z.array(
-  z.object({
-    id: z.string(),
-    relevance: z.number().min(0).max(10),
-    practicality: z.number().min(0).max(10),
-    rigor: z.number().min(0).max(10),
-    trap: z.string().optional(),
-    strength: z.string().optional(),
-  }),
+	z.object({
+		id: z.string(),
+		relevance: z.number().min(0).max(10),
+		practicality: z.number().min(0).max(10),
+		rigor: z.number().min(0).max(10),
+		trap: z.string().optional(),
+		strength: z.string().optional(),
+	}),
 );
 
 const ClusterSchema = z.array(
-  z.object({ label: z.string(), paperIds: z.array(z.string()) }),
+	z.object({ label: z.string(), paperIds: z.array(z.string()) }),
 );
 
 const ConvergeSchema = z.object({
-  chosenClusterLabel: z.string(),
-  sketch: z.string(),
-  citations: z.array(z.object({ paperId: z.string(), role: z.string() })),
-  firstStep: z.string(),
-  loadBearingRisk: z.string(),
-  avoid: z.array(z.string()),
-  alternates: z.array(z.object({ label: z.string(), oneLiner: z.string() })),
-  openThread: z.string(),
+	chosenClusterLabel: z.string(),
+	sketch: z.string(),
+	citations: z.array(z.object({ paperId: z.string(), role: z.string() })),
+	firstStep: z.string(),
+	loadBearingRisk: z.string(),
+	avoid: z.array(z.string()),
+	alternates: z.array(z.object({ label: z.string(), oneLiner: z.string() })),
+	openThread: z.string(),
 });
 
 const CATEGORY_SYSTEM = `You map a software/engineering build problem onto arXiv's subject taxonomy so
@@ -165,24 +165,43 @@ Rules:
 Output JSON only.`;
 
 function deriveNaiveTerms(problem: string): string[] {
-  const stop = new Set([
-    "the", "a", "an", "and", "or", "for", "with", "that", "this", "into",
-    "from", "using", "build", "want", "need", "system", "approach",
-  ]);
-  const words = problem
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 3 && !stop.has(w));
-  return [...new Set(words)].slice(0, 5);
+	const stop = new Set([
+		"the",
+		"a",
+		"an",
+		"and",
+		"or",
+		"for",
+		"with",
+		"that",
+		"this",
+		"into",
+		"from",
+		"using",
+		"build",
+		"want",
+		"need",
+		"system",
+		"approach",
+	]);
+	const words = problem
+		.toLowerCase()
+		.replace(/[^a-z0-9\s-]/g, " ")
+		.split(/\s+/)
+		.filter((w) => w.length > 3 && !stop.has(w));
+	return [...new Set(words)].slice(0, 5);
 }
 
 async function selectCategories(
-  problem: string,
-  context: string | undefined,
-  model: string | undefined,
-): Promise<{ categories: { id: string; why: string }[]; terms: string[]; note?: string }> {
-  const userPrompt = `PROBLEM:
+	problem: string,
+	context: string | undefined,
+	model: string | undefined,
+): Promise<{
+	categories: { id: string; why: string }[];
+	terms: string[];
+	note?: string;
+}> {
+	const userPrompt = `PROBLEM:
 ${problem}
 
 ${context ? `CONTEXT:\n${context}\n\n` : ""}CURATED CATEGORY LIST:
@@ -190,34 +209,42 @@ ${renderCategoryTable()}
 
 Pick categories and search terms. Output JSON only.`;
 
-  const raw = await callLLM({ model, systemPrompt: CATEGORY_SYSTEM, userPrompt });
-  try {
-    const parsed = parseJSON(raw, CategorySelectSchema);
-    const categories = parsed.categories.filter((c) => looksLikeCategoryId(c.id));
-    if (categories.length === 0) throw new Error("no valid category ids");
-    return { categories, terms: parsed.terms, note: parsed.note };
-  } catch {
-    // Fail open — default to a broad, generally-useful spread.
-    return {
-      categories: [
-        { id: "cs.AI", why: "fallback: category-select pass failed to parse" },
-        { id: "cs.SE", why: "fallback: category-select pass failed to parse" },
-        { id: "cs.DC", why: "fallback: category-select pass failed to parse" },
-      ],
-      terms: deriveNaiveTerms(problem),
-    };
-  }
+	const raw = await callLLM({
+		model,
+		systemPrompt: CATEGORY_SYSTEM,
+		userPrompt,
+	});
+	try {
+		const parsed = parseJSON(raw, CategorySelectSchema);
+		const categories = parsed.categories.filter((c) =>
+			looksLikeCategoryId(c.id),
+		);
+		if (categories.length === 0) throw new Error("no valid category ids");
+		return { categories, terms: parsed.terms, note: parsed.note };
+	} catch {
+		// Fail open — default to a broad, generally-useful spread.
+		return {
+			categories: [
+				{ id: "cs.AI", why: "fallback: category-select pass failed to parse" },
+				{ id: "cs.SE", why: "fallback: category-select pass failed to parse" },
+				{ id: "cs.DC", why: "fallback: category-select pass failed to parse" },
+			],
+			terms: deriveNaiveTerms(problem),
+		};
+	}
 }
 
 async function readPaper(
-  problem: string,
-  context: string | undefined,
-  paper: Paper,
-  model: string | undefined,
+	problem: string,
+	context: string | undefined,
+	paper: Paper,
+	model: string | undefined,
 ): Promise<PaperRead> {
-  const year = paper.published.slice(0, 4);
-  const authors = paper.authors.slice(0, 3).join(", ") + (paper.authors.length > 3 ? " et al." : "");
-  const userPrompt = `PROBLEM:
+	const year = paper.published.slice(0, 4);
+	const authors =
+		paper.authors.slice(0, 3).join(", ") +
+		(paper.authors.length > 3 ? " et al." : "");
+	const userPrompt = `PROBLEM:
 ${problem}
 
 ${context ? `CONTEXT:\n${context}\n\n` : ""}PAPER (arXiv:${paper.id}, ${year}):
@@ -227,75 +254,78 @@ Abstract: ${paper.summary}
 
 Output JSON only.`;
 
-  const raw = await callLLM({ model, systemPrompt: READ_SYSTEM, userPrompt });
+	const raw = await callLLM({ model, systemPrompt: READ_SYSTEM, userPrompt });
 
-  try {
-    const parsed = parseJSON(raw, ReadSchema);
-    return { paper, ...parsed };
-  } catch {
-    return {
-      paper,
-      approach: "(read pass failed to parse)",
-      borrow: "(unavailable)",
-      limitation: "(unavailable)",
-      relevanceNote: "(unavailable)",
-    };
-  }
+	try {
+		const parsed = parseJSON(raw, ReadSchema);
+		return { paper, ...parsed };
+	} catch {
+		return {
+			paper,
+			approach: "(read pass failed to parse)",
+			borrow: "(unavailable)",
+			limitation: "(unavailable)",
+			relevanceNote: "(unavailable)",
+		};
+	}
 }
 
 async function scoreReads(
-  problem: string,
-  reads: PaperRead[],
-  model: string | undefined,
+	problem: string,
+	reads: PaperRead[],
+	model: string | undefined,
 ): Promise<Map<string, Score>> {
-  if (reads.length === 0) return new Map();
+	if (reads.length === 0) return new Map();
 
-  const userPrompt = `PROBLEM:
+	const userPrompt = `PROBLEM:
 ${problem}
 
 READINGS (id :: title :: approach :: borrow :: limitation):
 ${reads
-  .map((r) => `${r.paper.id} :: ${r.paper.title} :: ${r.approach} :: ${r.borrow} :: ${r.limitation}`)
-  .join("\n")}
+	.map(
+		(r) =>
+			`${r.paper.id} :: ${r.paper.title} :: ${r.approach} :: ${r.borrow} :: ${r.limitation}`,
+	)
+	.join("\n")}
 
 Score each. Output JSON array:
 [{"id":"...","relevance":0-10,"practicality":0-10,"rigor":0-10,"strength":"...","trap":"... or omit"}]`;
 
-  const raw = await callLLM({ model, systemPrompt: SCORE_SYSTEM, userPrompt });
+	const raw = await callLLM({ model, systemPrompt: SCORE_SYSTEM, userPrompt });
 
-  let rows: z.infer<typeof ScoreRowSchema>;
-  try {
-    rows = parseJSON(raw, ScoreRowSchema);
-  } catch {
-    return new Map();
-  }
+	let rows: z.infer<typeof ScoreRowSchema>;
+	try {
+		rows = parseJSON(raw, ScoreRowSchema);
+	} catch {
+		return new Map();
+	}
 
-  const out = new Map<string, Score>();
-  for (const r of rows) {
-    // Practicality weighted heaviest — the point is to build, not survey.
-    // Relevance next; rigor is a smaller tiebreaker (a well-evidenced paper
-    // that doesn't fit the problem is still the wrong pick).
-    const total = r.relevance * 0.4 + r.practicality * 0.4 + r.rigor * 0.2;
-    out.set(r.id, {
-      relevance: r.relevance,
-      practicality: r.practicality,
-      rigor: r.rigor,
-      total,
-      trap: r.trap,
-      strength: r.strength,
-    });
-  }
-  return out;
+	const out = new Map<string, Score>();
+	for (const r of rows) {
+		// Practicality weighted heaviest — the point is to build, not survey.
+		// Relevance next; rigor is a smaller tiebreaker (a well-evidenced paper
+		// that doesn't fit the problem is still the wrong pick).
+		const total = r.relevance * 0.4 + r.practicality * 0.4 + r.rigor * 0.2;
+		out.set(r.id, {
+			relevance: r.relevance,
+			practicality: r.practicality,
+			rigor: r.rigor,
+			total,
+			trap: r.trap,
+			strength: r.strength,
+		});
+	}
+	return out;
 }
 
 async function clusterReads(
-  problem: string,
-  reads: PaperRead[],
-  model: string | undefined,
+	problem: string,
+	reads: PaperRead[],
+	model: string | undefined,
 ): Promise<Cluster[]> {
-  if (reads.length === 0) return [];
+	if (reads.length === 0) return [];
 
-  const userPrompt = `PROBLEM:
+	const userPrompt = `PROBLEM:
 ${problem}
 
 READINGS:
@@ -303,189 +333,229 @@ ${reads.map((r) => `${r.paper.id} :: ${r.paper.title} :: ${r.approach}`).join("\
 
 Output JSON: [{"label":"...","paperIds":["...","..."]}]`;
 
-  const raw = await callLLM({ model, systemPrompt: CLUSTER_SYSTEM, userPrompt });
+	const raw = await callLLM({
+		model,
+		systemPrompt: CLUSTER_SYSTEM,
+		userPrompt,
+	});
 
-  try {
-    return parseJSON(raw, ClusterSchema);
-  } catch {
-    return [];
-  }
+	try {
+		return parseJSON(raw, ClusterSchema);
+	} catch {
+		return [];
+	}
 }
 
 async function convergeToOnePath(
-  problem: string,
-  reads: PaperRead[],
-  clusters: Cluster[],
-  model: string | undefined,
-): Promise<{ chosenPath: ConvergedPath; alternates: AlternatePath[]; openThread: string } | null> {
-  const effectiveClusters =
-    clusters.length > 0 ? clusters : [{ label: "all findings", paperIds: reads.map((r) => r.paper.id) }];
+	problem: string,
+	reads: PaperRead[],
+	clusters: Cluster[],
+	model: string | undefined,
+): Promise<{
+	chosenPath: ConvergedPath;
+	alternates: AlternatePath[];
+	openThread: string;
+} | null> {
+	const effectiveClusters =
+		clusters.length > 0
+			? clusters
+			: [{ label: "all findings", paperIds: reads.map((r) => r.paper.id) }];
 
-  const clusterBlocks = effectiveClusters
-    .map((c) => {
-      const members = c.paperIds
-        .map((id) => reads.find((r) => r.paper.id === id))
-        .filter((r): r is PaperRead => Boolean(r));
-      const memberText = members
-        .map((r) => {
-          const chip = r.score
-            ? `[rel${r.score.relevance} prac${r.score.practicality} rig${r.score.rigor}]`
-            : "";
-          return `  - ${r.paper.id} :: "${r.paper.title}" (${r.paper.published.slice(0, 4)}) ${chip}
+	const clusterBlocks = effectiveClusters
+		.map((c) => {
+			const members = c.paperIds
+				.map((id) => reads.find((r) => r.paper.id === id))
+				.filter((r): r is PaperRead => Boolean(r));
+			const memberText = members
+				.map((r) => {
+					const chip = r.score
+						? `[rel${r.score.relevance} prac${r.score.practicality} rig${r.score.rigor}]`
+						: "";
+					return `  - ${r.paper.id} :: "${r.paper.title}" (${r.paper.published.slice(0, 4)}) ${chip}
     approach: ${r.approach}
     borrow: ${r.borrow}
     limitation: ${r.limitation}`;
-        })
-        .join("\n");
-      return `CLUSTER "${c.label}":\n${memberText}`;
-    })
-    .join("\n\n");
+				})
+				.join("\n");
+			return `CLUSTER "${c.label}":\n${memberText}`;
+		})
+		.join("\n\n");
 
-  const userPrompt = `PROBLEM:
+	const userPrompt = `PROBLEM:
 ${problem}
 
 ${clusterBlocks}
 
 Pick ONE cluster as the recommended path and synthesize. Output JSON only.`;
 
-  const raw = await callLLM({ model, systemPrompt: CONVERGE_SYSTEM, userPrompt });
+	const raw = await callLLM({
+		model,
+		systemPrompt: CONVERGE_SYSTEM,
+		userPrompt,
+	});
 
-  let parsed: z.infer<typeof ConvergeSchema>;
-  try {
-    parsed = parseJSON(raw, ConvergeSchema);
-  } catch {
-    return null;
-  }
+	let parsed: z.infer<typeof ConvergeSchema>;
+	try {
+		parsed = parseJSON(raw, ConvergeSchema);
+	} catch {
+		return null;
+	}
 
-  const chosenCluster =
-    effectiveClusters.find((c) => c.label === parsed.chosenClusterLabel) ?? effectiveClusters[0];
+	const chosenCluster =
+		effectiveClusters.find((c) => c.label === parsed.chosenClusterLabel) ??
+		effectiveClusters[0];
 
-  const citations: Citation[] = parsed.citations.map((c) => {
-    const r = reads.find((x) => x.paper.id === c.paperId);
-    return {
-      paperId: c.paperId,
-      title: r?.paper.title ?? c.paperId,
-      url: r?.paper.absUrl ?? `https://arxiv.org/abs/${c.paperId}`,
-      role: c.role,
-    };
-  });
+	const citations: Citation[] = parsed.citations.map((c) => {
+		const r = reads.find((x) => x.paper.id === c.paperId);
+		return {
+			paperId: c.paperId,
+			title: r?.paper.title ?? c.paperId,
+			url: r?.paper.absUrl ?? `https://arxiv.org/abs/${c.paperId}`,
+			role: c.role,
+		};
+	});
 
-  return {
-    chosenPath: {
-      clusterLabel: chosenCluster.label,
-      sketch: parsed.sketch,
-      citations,
-      firstStep: parsed.firstStep,
-      loadBearingRisk: parsed.loadBearingRisk,
-      avoid: parsed.avoid,
-    },
-    alternates: parsed.alternates,
-    openThread: parsed.openThread,
-  };
+	return {
+		chosenPath: {
+			clusterLabel: chosenCluster.label,
+			sketch: parsed.sketch,
+			citations,
+			firstStep: parsed.firstStep,
+			loadBearingRisk: parsed.loadBearingRisk,
+			avoid: parsed.avoid,
+		},
+		alternates: parsed.alternates,
+		openThread: parsed.openThread,
+	};
 }
 
 export async function run(opts: RunOptions): Promise<RunResult> {
-  const {
-    problem,
-    context,
-    categories: categoryOverride,
-    papersPerCategory = 4,
-    concurrency = 4,
-    sinceYears = 8,
-    model,
-    criticModel,
-    onEvent,
-  } = opts;
+	const {
+		problem,
+		context,
+		categories: categoryOverride,
+		papersPerCategory = 4,
+		concurrency = 4,
+		sinceYears = 8,
+		model,
+		criticModel,
+		onEvent,
+	} = opts;
 
-  const critic = criticModel ?? model;
+	const critic = criticModel ?? model;
 
-  // PHASE 0 — CATEGORIZE. Skipped if the caller pinned categories.
-  let categories: { id: string; why: string }[];
-  let terms: string[];
-  let note: string | undefined;
-  if (categoryOverride && categoryOverride.length > 0) {
-    categories = categoryOverride.map((id) => ({ id, why: "user-specified" }));
-    terms = deriveNaiveTerms(problem);
-  } else {
-    const sel = await selectCategories(problem, context, model);
-    categories = sel.categories;
-    terms = sel.terms;
-    note = sel.note;
-  }
-  onEvent?.({ kind: "categories:done", categories: categories.map((c) => c.id), terms });
+	// PHASE 0 — CATEGORIZE. Skipped if the caller pinned categories.
+	let categories: { id: string; why: string }[];
+	let terms: string[];
+	let note: string | undefined;
+	if (categoryOverride && categoryOverride.length > 0) {
+		categories = categoryOverride.map((id) => ({ id, why: "user-specified" }));
+		terms = deriveNaiveTerms(problem);
+	} else {
+		const sel = await selectCategories(problem, context, model);
+		categories = sel.categories;
+		terms = sel.terms;
+		note = sel.note;
+	}
+	onEvent?.({
+		kind: "categories:done",
+		categories: categories.map((c) => c.id),
+		terms,
+	});
 
-  const categoryIds = categories.map((c) => c.id);
+	const categoryIds = categories.map((c) => c.id);
 
-  // PHASE 1 — FETCH. Real HTTP against export.arxiv.org. No LLM.
-  let papers = await searchArxivCategories(categoryIds, terms, papersPerCategory, sinceYears, (f) => {
-    onEvent?.({ kind: "fetch:done", category: f.category, count: f.papers.length });
-  });
+	// PHASE 1 — FETCH. Real HTTP against export.arxiv.org. No LLM.
+	let papers = await searchArxivCategories(
+		categoryIds,
+		terms,
+		papersPerCategory,
+		sinceYears,
+		(f) => {
+			onEvent?.({
+				kind: "fetch:done",
+				category: f.category,
+				count: f.papers.length,
+			});
+		},
+	);
 
-  if (papers.length < 3) {
-    onEvent?.({ kind: "warn", message: "thin results — widening search by dropping search terms" });
-    const widened = await widenSearch(categoryIds, papersPerCategory, sinceYears);
-    const byId = new Map(papers.map((p) => [p.id, p]));
-    for (const p of widened) if (!byId.has(p.id)) byId.set(p.id, p);
-    papers = [...byId.values()];
-  }
+	if (papers.length < 3) {
+		onEvent?.({
+			kind: "warn",
+			message: "thin results — widening search by dropping search terms",
+		});
+		const widened = await widenSearch(
+			categoryIds,
+			papersPerCategory,
+			sinceYears,
+		);
+		const byId = new Map(papers.map((p) => [p.id, p]));
+		for (const p of widened) if (!byId.has(p.id)) byId.set(p.id, p);
+		papers = [...byId.values()];
+	}
 
-  if (papers.length === 0) {
-    return {
-      problem,
-      categories,
-      searchTerms: terms,
-      note,
-      papers: [],
-      reads: [],
-      clusters: [],
-      chosenPath: null,
-      alternates: [],
-      openThread:
-        "No papers surfaced for these categories/terms — that's itself a signal: either the mechanism is too novel for arXiv, or the search terms need to be more literal. Try --categories or narrower terms.",
-    };
-  }
+	if (papers.length === 0) {
+		return {
+			problem,
+			categories,
+			searchTerms: terms,
+			note,
+			papers: [],
+			reads: [],
+			clusters: [],
+			chosenPath: null,
+			alternates: [],
+			openThread:
+				"No papers surfaced for these categories/terms — that's itself a signal: either the mechanism is too novel for arXiv, or the search terms need to be more literal. Try --categories or narrower terms.",
+		};
+	}
 
-  // PHASE 2 — DIVERGE / READ. Parallel, isolated. No branch sees another paper.
-  const limit = pLimit(concurrency);
-  const reads = await Promise.all(
-    papers.map((p) =>
-      limit(async () => {
-        onEvent?.({ kind: "read:start", paperId: p.id, title: p.title });
-        const r = await readPaper(problem, context, p, model);
-        onEvent?.({ kind: "read:done", paperId: p.id });
-        return r;
-      }),
-    ),
-  );
+	// PHASE 2 — DIVERGE / READ. Parallel, isolated. No branch sees another paper.
+	const limit = pLimit(concurrency);
+	const reads = await Promise.all(
+		papers.map((p) =>
+			limit(async () => {
+				onEvent?.({ kind: "read:start", paperId: p.id, title: p.title });
+				const r = await readPaper(problem, context, p, model);
+				onEvent?.({ kind: "read:done", paperId: p.id });
+				return r;
+			}),
+		),
+	);
 
-  // PHASE 3 — SCORE + CLUSTER. Critic comes back online.
-  const [scoreMap, clusters] = await Promise.all([
-    scoreReads(problem, reads, critic),
-    clusterReads(problem, reads, critic),
-  ]);
-  for (const r of reads) r.score = scoreMap.get(r.paper.id);
-  for (const c of clusters)
-    for (const id of c.paperIds) {
-      const r = reads.find((x) => x.paper.id === id);
-      if (r) r.cluster = c.label;
-    }
-  onEvent?.({ kind: "score:done", total: reads.length });
-  onEvent?.({ kind: "cluster:done", clusters: clusters.length });
+	// PHASE 3 — SCORE + CLUSTER. Critic comes back online.
+	const [scoreMap, clusters] = await Promise.all([
+		scoreReads(problem, reads, critic),
+		clusterReads(problem, reads, critic),
+	]);
+	for (const r of reads) r.score = scoreMap.get(r.paper.id);
+	for (const c of clusters)
+		for (const id of c.paperIds) {
+			const r = reads.find((x) => x.paper.id === id);
+			if (r) r.cluster = c.label;
+		}
+	onEvent?.({ kind: "score:done", total: reads.length });
+	onEvent?.({ kind: "cluster:done", clusters: clusters.length });
 
-  // PHASE 4 — CONVERGE. One recommended path, not a shortlist.
-  const converged = await convergeToOnePath(problem, reads, clusters, critic);
-  onEvent?.({ kind: "converge:done", chosen: converged?.chosenPath.clusterLabel ?? null });
+	// PHASE 4 — CONVERGE. One recommended path, not a shortlist.
+	const converged = await convergeToOnePath(problem, reads, clusters, critic);
+	onEvent?.({
+		kind: "converge:done",
+		chosen: converged?.chosenPath.clusterLabel ?? null,
+	});
 
-  return {
-    problem,
-    categories,
-    searchTerms: terms,
-    note,
-    papers,
-    reads,
-    clusters,
-    chosenPath: converged?.chosenPath ?? null,
-    alternates: converged?.alternates ?? [],
-    openThread: converged?.openThread ?? "What did none of these papers address?",
-  };
+	return {
+		problem,
+		categories,
+		searchTerms: terms,
+		note,
+		papers,
+		reads,
+		clusters,
+		chosenPath: converged?.chosenPath ?? null,
+		alternates: converged?.alternates ?? [],
+		openThread:
+			converged?.openThread ?? "What did none of these papers address?",
+	};
 }

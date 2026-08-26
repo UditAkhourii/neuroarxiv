@@ -1,0 +1,18 @@
+{
+	"name": "neuroarxiv",
+	"version": "0.1.1",
+	"description": "Grounds architecture decisions in real arXiv prior art before implementation.",
+	"skills": "./skills",
+	"author": {
+		"name": "NeuroArxiv contributors"
+	},
+	"interface": {
+		"displayName": "NeuroArxiv",
+		"shortDescription": "Research prior art before building.",
+		"longDescription": "Reads real arXiv papers in isolated passes, scores and clusters the findings, then converges on one cited recommendation with a first step and known pitfalls.",
+		"developerName": "NeuroArxiv contributors",
+		"category": "Productivity",
+		"capabilities": ["skills"],
+		"defaultPrompt": "Use NeuroArxiv before committing to non-trivial architecture, algorithms, ML or systems techniques, or protocols."
+	}
+}

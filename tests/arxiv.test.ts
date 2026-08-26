@@ -1,15 +1,18 @@
-import assert from "node:assert/strict";
-import test from "node:test";
+import { test } from "bun:test";
+import assert from "assert/strict";
 
 import { buildSearchQuery, parseEntries } from "../src/arxiv.ts";
 
 test("buildSearchQuery combines category and OR'd terms", () => {
-  const q = buildSearchQuery("cs.DB", ["cache invalidation", "consistency"]);
-  assert.equal(q, 'cat:cs.DB AND (all:"cache invalidation" OR all:consistency)');
+	const q = buildSearchQuery("cs.DB", ["cache invalidation", "consistency"]);
+	assert.equal(
+		q,
+		'cat:cs.DB AND (all:"cache invalidation" OR all:consistency)',
+	);
 });
 
 test("buildSearchQuery with no terms is category-only", () => {
-  assert.equal(buildSearchQuery("cs.AI", []), "cat:cs.AI");
+	assert.equal(buildSearchQuery("cs.AI", []), "cat:cs.AI");
 });
 
 // Real fixture captured from https://export.arxiv.org/api/query
@@ -41,24 +44,24 @@ representing its content.
 </feed>`;
 
 test("parseEntries extracts bare id, version, title, authors, links from a real Atom fixture", () => {
-  const papers = parseEntries(FIXTURE_XML, "cs.AI");
-  assert.equal(papers.length, 1);
+	const papers = parseEntries(FIXTURE_XML, "cs.AI");
+	assert.equal(papers.length, 1);
 
-  const p = papers[0];
-  assert.equal(p.id, "0807.4618");
-  assert.equal(p.version, "0807.4618v1");
-  assert.equal(p.title, "AceWiki: A Natural and Expressive Semantic Wiki");
-  assert.deepEqual(p.authors, ["Kaarel Kaljurand", "Norbert E. Fuchs"]);
-  assert.equal(p.categories.length, 1);
-  assert.equal(p.categories[0], "cs.AI");
-  assert.equal(p.absUrl, "https://arxiv.org/abs/0807.4618v1");
-  assert.equal(p.pdfUrl, "https://arxiv.org/pdf/0807.4618v1");
-  assert.equal(p.published, "2008-07-29T09:54:44Z");
-  assert.match(p.summary, /^We present AceWiki/);
-  // XML entities (&amp;) must be unescaped, not left literal.
-  assert.match(p.summary, / & more/);
+	const p = papers[0];
+	assert.equal(p.id, "0807.4618");
+	assert.equal(p.version, "0807.4618v1");
+	assert.equal(p.title, "AceWiki: A Natural and Expressive Semantic Wiki");
+	assert.deepEqual(p.authors, ["Kaarel Kaljurand", "Norbert E. Fuchs"]);
+	assert.equal(p.categories.length, 1);
+	assert.equal(p.categories[0], "cs.AI");
+	assert.equal(p.absUrl, "https://arxiv.org/abs/0807.4618v1");
+	assert.equal(p.pdfUrl, "https://arxiv.org/pdf/0807.4618v1");
+	assert.equal(p.published, "2008-07-29T09:54:44Z");
+	assert.match(p.summary, /^We present AceWiki/);
+	// XML entities (&amp;) must be unescaped, not left literal.
+	assert.match(p.summary, / & more/);
 });
 
 test("parseEntries returns an empty array for a feed with no entries", () => {
-  assert.deepEqual(parseEntries("<feed></feed>", "cs.AI"), []);
+	assert.deepEqual(parseEntries("<feed></feed>", "cs.AI"), []);
 });

@@ -1,0 +1,9 @@
+{
+	"$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+	"name": "neuroarxiv",
+	"version": "0.1.1",
+	"description": "Grounds architecture decisions in real arXiv prior art before implementation.",
+	"author": {
+		"name": "NeuroArxiv contributors"
+	}
+}

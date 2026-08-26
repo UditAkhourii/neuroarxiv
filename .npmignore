@@ -1,7 +1,0 @@
-src
-node_modules
-*.log
-.env
-.gitignore
-tsconfig.json
-.npmignore
