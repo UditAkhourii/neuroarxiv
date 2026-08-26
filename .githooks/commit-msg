@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+message_file=${1:?"usage: commit-msg <message-file>"}
+subject=$(sed -n '1p' "$message_file")
+
+exception_pattern='^(Merge [^[:space:]].*|Revert "[^[:space:]].*"|fixup! [^[:space:]].*|squash! [^[:space:]].*)$'
+if printf '%s\n' "$subject" | grep -Eq "$exception_pattern"; then
+  exit 0
+fi
+
+pattern='^[a-z][a-z0-9-]*(\([^)]+\))?!?: [^[:space:]].*'
+if ! printf '%s\n' "$subject" | grep -Eq "$pattern"; then
+  printf '%s\n' \
+    'Commit message must follow Conventional Commits.' \
+    'Expected: type(scope): description' \
+    'Example: feat(auth): add login form' >&2
+  exit 1
+fi
