@@ -6,9 +6,10 @@
 
 [![CI](https://github.com/UditAkhourii/neuroarxiv/actions/workflows/ci.yml/badge.svg)](https://github.com/UditAkhourii/neuroarxiv/actions/workflows/ci.yml)
 [![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](#install)
+[![Bun](https://img.shields.io/badge/bun-%3E%3D1.4.0-brightgreen)](#install)
 
 > ### 🎮 [**Join the Discord →**](https://discord.gg/NbWwkwwGw)
+>
 > This is where the real-time thinking happens: arXiv category coverage, eval design, prior-art hunting, and neurodivergence-inspired research on reasoning architectures — shared with the [ADHD](https://github.com/UditAkhourii/adhd) community. Got opinions on isolation discipline, corpus gaps, or just want to argue about the next eval problem — **[come argue with us live](https://discord.gg/NbWwkwwGw).**
 
 > 👉 [**Join the community →**](https://tally.so/r/WO1Nzj) as a contributor, maintainer, early adopter, or just a member. One short form. We coordinate category-taxonomy contributions, eval problems, integrations, and adopter onboarding there.
@@ -67,15 +68,24 @@ per-problem transcripts, and every honest limitation:
 
 ## Install
 
-One line, no clone, no build step of your own — drops the skill straight
-into `~/.claude/skills/neuroarxiv`:
+One line, no clone, no build step of your own. Bun 1.4.0 or newer is required.
+Use `--package` so Bun can resolve the explicitly named executable from this
+GitHub package:
 
 ```bash
-npx github:UditAkhourii/neuroarxiv install
+bunx --bun --package github:UditAkhourii/neuroarxiv neuroarxiv install
 ```
 
-Restart Claude Code (or start a new session) and `/neuroarxiv "<problem>"`
-is live.
+The installer supports Claude Code, Codex CLI, Cursor, and Antigravity. With
+no target flag it installs for every detected agent; choose one explicitly
+with `--claude`, `--codex`, `--cursor`, or `--antigravity`, or use `--all` for
+all four. Restart the agent (or reload Cursor) after installation.
+
+The repository is also a portable Agent Plugin: its root `plugin.json` and
+`skills/neuroarxiv/SKILL.md` can be installed directly from Cursor's Plugins
+view. Antigravity's `--antigravity` target installs the skill at its official
+user-global `~/.gemini/config/skills/neuroarxiv` location. Codex CLI uses the
+`.codex-plugin/plugin.json` manifest and the same skill directory.
 
 <details>
 <summary>Prefer a full local checkout (editing the engine, running the CLI directly, contributing)?</summary>
@@ -83,12 +93,20 @@ is live.
 ```bash
 git clone https://github.com/UditAkhourii/neuroarxiv.git
 cd neuroarxiv
-npm install
-npm run build
-node dist/cli.js install
+bun install
+bun run build
+bun dist/cli.js install --all
 ```
 
 </details>
+
+Maintainers can update the package, plugin, and marketplace version contract
+together with one deterministic command (the helper is repository-only and is
+not included in the published package):
+
+```bash
+bun run version:set -- 0.1.1
+```
 
 ## Quickstart
 
