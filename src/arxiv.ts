@@ -9,7 +9,7 @@
 // sequentially with a delay, even though the LLM read passes downstream
 // are parallel — the fan-out happens after the data is already local.
 
-import type { Paper } from "./types.js";
+import type { Paper } from "./types.ts";
 
 const ARXIV_API = "https://export.arxiv.org/api/query";
 const REQUEST_DELAY_MS = 3000;

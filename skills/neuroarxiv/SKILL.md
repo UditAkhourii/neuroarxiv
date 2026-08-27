@@ -1,6 +1,6 @@
 ---
 name: neuroarxiv
-description: Grounds a coding agent's architecture decisions in real arXiv prior art before it builds something new. Reads arXiv category-wise via real HTTP fetch, spawns parallel isolated reads across the papers found, scores/clusters them, then converges on ONE recommended path with citations, a first step, and known prior-art pitfalls to avoid. Use on /neuroarxiv, before designing non-trivial architecture, algorithms, ML/systems techniques, or protocols, or when the user asks "has anyone solved this", "what's the state of the art", or "am I about to rebuild something that already exists". Skip for trivial CRUD, glue code, or closed phrasing ("just", "quick", "standard"). Full pre-flight gate is in the skill body.
+description: Use this skill when deciding non-trivial architecture, algorithms, ML or systems techniques, or protocols and real prior art could prevent a rebuild. Reads arXiv category-wise via real HTTP fetch, spawns parallel isolated reads across the papers found, scores/clusters them, then converges on ONE recommended path with citations, a first step, and known prior-art pitfalls to avoid. Use on /neuroarxiv or when the user asks "has anyone solved this", "what's the state of the art", or "am I about to rebuild something that already exists". Skip for trivial CRUD, glue code, or closed phrasing ("just", "quick", "standard"). Full pre-flight gate is in the skill body.
 license: MIT
 ---
 
@@ -221,13 +221,13 @@ the ones where getting the architecture wrong costs real rework.
 
 ## Companion library and CLI
 
-This repo also ships a Node/TS implementation (`src/`) that runs the same
+This repo also ships a Bun/TypeScript implementation (`src/`) that runs the same
 loop against real arXiv HTTP and the Claude Agent SDK — useful outside
 Claude Code, for scripted/batch runs, or when you want the fetch and
 parsing to be deterministic code instead of a WebFetch call.
 
-    npm install
-    npm run build
+    bun install
+    bun run build
     neuroarxiv "how should I cache LLM completions across requests?"
 
 The skill above gives you the same loop inside Claude Code with no

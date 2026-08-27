@@ -2,7 +2,7 @@
 // (grouped by cluster, chip-scored) → prior-art warnings → THE PATH (one,
 // not a shortlist) → alternates considered → open thread.
 
-import type { PaperRead, RunResult } from "./types.js";
+import type { PaperRead, RunResult } from "./types.ts";
 
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
@@ -40,10 +40,10 @@ export function renderText(r: RunResult): string {
   for (const read of r.reads) {
     const key = read.cluster ?? "(unclustered)";
     if (!byCluster.has(key)) byCluster.set(key, []);
-    byCluster.get(key)!.push(read);
+    byCluster.get(key)?.push(read);
   }
   for (const [label, reads] of byCluster) {
-    out.push("  " + cyan(label));
+    out.push(`  ${cyan(label)}`);
     for (const read of reads) {
       out.push(`    - [${read.paper.id}] ${read.paper.title} ${chip(read)}`);
       out.push(`      ${dim(read.approach)}`);
@@ -64,15 +64,15 @@ export function renderText(r: RunResult): string {
 
   if (r.chosenPath) {
     out.push(bold("THE PATH — ") + green(r.chosenPath.clusterLabel));
-    out.push("  " + r.chosenPath.sketch.split("\n").join("\n  "));
+    out.push(`  ${r.chosenPath.sketch.split("\n").join("\n  ")}`);
     out.push("");
-    out.push("  " + bold("First step: ") + r.chosenPath.firstStep);
-    out.push("  " + bold("Load-bearing risk: ") + r.chosenPath.loadBearingRisk);
+    out.push(`  ${bold("First step: ")}${r.chosenPath.firstStep}`);
+    out.push(`  ${bold("Load-bearing risk: ")}${r.chosenPath.loadBearingRisk}`);
     if (r.chosenPath.avoid.length > 0) {
-      out.push("  " + bold("Avoid (known prior-art pitfalls):"));
+      out.push(`  ${bold("Avoid (known prior-art pitfalls):")}`);
       for (const a of r.chosenPath.avoid) out.push(`    · ${a}`);
     }
-    out.push("  " + bold("Citations:"));
+    out.push(`  ${bold("Citations:")}`);
     for (const c of r.chosenPath.citations) {
       out.push(`    · [${c.paperId}] ${c.title} — ${dim(c.role)}`);
       out.push(`      ${dim(c.url)}`);
@@ -80,7 +80,7 @@ export function renderText(r: RunResult): string {
     out.push("");
   } else {
     out.push(bold("THE PATH"));
-    out.push("  " + yellow("Convergence pass failed to parse — see raw reads above."));
+    out.push(`  ${yellow("Convergence pass failed to parse — see raw reads above.")}`);
     out.push("");
   }
 
@@ -93,7 +93,7 @@ export function renderText(r: RunResult): string {
   }
 
   out.push(bold("Open thread"));
-  out.push("  " + yellow(r.openThread));
+  out.push(`  ${yellow(r.openThread)}`);
 
   return out.join("\n");
 }
