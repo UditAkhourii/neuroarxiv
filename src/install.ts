@@ -101,6 +101,9 @@ export function resolveTargets(
 export type InstallOptions = {
   packageRoot: string;
   requested: readonly AgentId[];
+  /** Injectable alongside `home` so a caller (or a test) can install against a sandboxed root. */
+  env?: Record<string, string | undefined>;
+  home?: string;
   log?: (message: string) => void;
   logError?: (message: string) => void;
 };
@@ -118,7 +121,10 @@ export function installSkill(opts: InstallOptions): number {
     return 1;
   }
 
-  const { selected, autoDetected, fellBack } = resolveTargets(requested);
+  const { selected, autoDetected, fellBack } = resolveTargets(
+    requested,
+    allAgentTargets(opts.env, opts.home),
+  );
 
   for (const target of selected) {
     mkdirSync(target.installDir, { recursive: true });
@@ -136,7 +142,7 @@ export function installSkill(opts: InstallOptions): number {
     const missing = AGENT_IDS.filter((id) => !selected.some((t) => t.id === id));
     for (const id of missing) {
       log("");
-      log(`  ${agentTarget(id).label} wasn't detected. Install for it anyway with \`${SKILL_NAME} install --${id}\`.`);
+      log(`  ${agentTarget(id, opts.env, opts.home).label} wasn't detected. Install for it anyway with \`${SKILL_NAME} install --${id}\`.`);
     }
   }
 
