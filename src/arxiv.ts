@@ -13,7 +13,7 @@ import type { Paper } from "./types.js";
 
 const ARXIV_API = "https://export.arxiv.org/api/query";
 const REQUEST_DELAY_MS = 3000;
-const REQUEST_TIMEOUT_MS = 20000;
+const REQUEST_TIMEOUT_MS = 60000;
 const USER_AGENT = "neuroarxiv-agent/0.1 (https://github.com/UditAkhourii/neuroarxiv; mailto:contact@example.com)";
 
 function sleep(ms: number): Promise<void> {
@@ -97,25 +97,43 @@ async function fetchOnce(searchQuery: string, maxResults: number): Promise<strin
   });
   const url = `${ARXIV_API}?${params.toString()}`;
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: controller.signal,
-    });
-    if (res.status === 429) {
-      // Back off once and retry — arXiv rate-limits aggressively.
-      await sleep(5000);
-      const retry = await fetch(url, { headers: { "User-Agent": USER_AGENT }, signal: controller.signal });
-      if (!retry.ok) throw new Error(`arXiv API returned ${retry.status} after retry`);
-      return retry.text();
+  // Each attempt gets its own timeout clock. Sharing one controller across
+  // the 429 retry made the retry inherit an already-fired abort signal.
+  async function attempt(): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      return await fetch(url, {
+        headers: { "User-Agent": USER_AGENT },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
     }
-    if (!res.ok) throw new Error(`arXiv API returned ${res.status}`);
-    return await res.text();
-  } finally {
-    clearTimeout(timer);
   }
+
+  // arXiv rate-limits aggressively: it holds the connection open for tens of
+  // seconds and then answers 429. Both the slow 429 and an outright timeout
+  // are the same "back off and come back" signal, so retry on either.
+  let res: Response | undefined;
+  let lastError = "";
+  for (const backoff of [5000, 15000, 45000, 0]) {
+    try {
+      res = await attempt();
+      if (res.status !== 429) break;
+      lastError = "rate-limited (429)";
+    } catch (err) {
+      if ((err as Error)?.name !== "AbortError") throw err;
+      res = undefined;
+      lastError = `timed out after ${REQUEST_TIMEOUT_MS / 1000}s`;
+    }
+    if (backoff === 0) {
+      throw new Error(`arXiv API ${lastError} after 4 attempts; try again in a few minutes`);
+    }
+    await sleep(backoff);
+  }
+  if (!res!.ok) throw new Error(`arXiv API returned ${res!.status}`);
+  return await res!.text();
 }
 
 function withinYears(paper: Paper, sinceYears: number): boolean {

@@ -44,8 +44,14 @@ export async function callLLM(opts: LLMOptions): Promise<string> {
         if (block.type === "text") chunks.push(block.text);
       }
     }
-    if (message.type === "result" && message.subtype !== "success") {
-      throw new Error(`LLM call failed: ${message.subtype}`);
+    if (message.type === "result") {
+      if (message.subtype !== "success") {
+        throw new Error(`LLM call failed: ${message.subtype}`);
+      }
+      // Break on result instead of draining the iterator: letting it run to
+      // completion makes the SDK surface the child's non-zero teardown exit
+      // as an error even though the query already succeeded.
+      break;
     }
   }
 
